@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>MediCare Hospital System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="heading">
+        <div class="logo">
+            <i class="fas fa-hospital"></i>
+        </div>
+        <h1>MediCare Hospital System</h1>
+    </div>
+    <div class="main">
+        <div class="menu" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+        <div class="sidebar" id="sidebar">
+            <h3><i class="fas fa-stethoscope"></i> Dashboard</h3>
+            <div class="button">
+                <div class="btn">
+                    <button id="symptomBtn">
+                        <i class="fas fa-notes-medical"></i> Symptom Analysis
+                    </button>
+                </div>
+                <div class="btn">
+                    <button id="medicationBtn">
+                        <i class="fas fa-pills"></i> Medications
+                    </button>
+                </div>
+                <div class="btn">
+                    <button id="precautionBtn">
+                        <i class="fas fa-shield-alt"></i> Precautions
+                    </button>
+                </div>
+                <div class="btn">
+                    <button id="historyBtn">
+                        <i class="fas fa-history"></i> Patient History
+                    </button>
+                </div>
+                <div class="btn">
+                    <button id="aboutBtn">
+                        <i class="fas fa-info-circle"></i> About System
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="content" id="mainContent">
+            <div class="welcome-section">
+                <h2>Welcome to MediCare Hospital System</h2>
+                <p>This intelligent system helps diagnose diseases based on symptoms and provides medication recommendations.</p>
+                <div class="features">
+                    <div class="feature-card">
+                        <i class="fas fa-search-plus"></i>
+                        <h3>Symptom Analysis</h3>
+                        <p>Enter your symptoms to get a possible diagnosis</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-pills"></i>
+                        <h3>Medication Guide</h3>
+                        <p>Get recommended medications for your condition</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Precautions</h3>
+                        <p>Learn preventive measures for various diseases</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
