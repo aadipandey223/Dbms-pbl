@@ -1,13 +1,14 @@
-// Toggle sidebar function
-function toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    sidebar.classList.toggle("active");
-}
+// Enhanced Patient Diagnosis System - Frontend
+const API_BASE = 'http://localhost:5001/api'; // Enhanced API
+const ENHANCED_API_BASE = 'http://localhost:5001/api'; // For new features
 
-// API base URL
-const API_BASE = 'http://localhost:5000/api';
+// Global state
+let currentUser = null;
+let availableSymptoms = [];
+let selectedSymptoms = [];
+let currentPatientId = null;
 
-// API helper functions
+// API Helper Functions
 async function apiCall(endpoint, options = {}) {
     try {
         const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -15,11 +16,12 @@ async function apiCall(endpoint, options = {}) {
                 'Content-Type': 'application/json',
                 ...options.headers
             },
+            credentials: 'include', // For session cookies
             ...options
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         return await response.json();
@@ -29,454 +31,796 @@ async function apiCall(endpoint, options = {}) {
     }
 }
 
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Get all buttons
-    const symptomBtn = document.getElementById('symptomBtn');
-    const medicationBtn = document.getElementById('medicationBtn');
-    const precautionBtn = document.getElementById('precautionBtn');
-    const historyBtn = document.getElementById('historyBtn');
-    const aboutBtn = document.getElementById('aboutBtn');
-    const mainContent = document.getElementById('mainContent');
+async function enhancedApiCall(endpoint, options = {}) {
+    try {
+        const response = await fetch(`${ENHANCED_API_BASE}${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            credentials: 'include',
+            ...options
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Enhanced API call failed:', error);
+        throw error;
+    }
+}
+
+// Utility Functions
+function showMessage(message, type = 'info') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
     
-    // Symptom Analysis button click event
-    symptomBtn.addEventListener('click', function() {
-        mainContent.innerHTML = `
-            <div class="section-content">
-                <h2><i class="fas fa-notes-medical"></i> Symptom Analysis</h2>
-                <p>Enter your symptoms below to get a possible diagnosis.</p>
-                
-                <!-- Patient Registration Form -->
-                <div class="patient-form">
-                    <h3><i class="fas fa-user-plus"></i> Patient Registration</h3>
-                    <form id="patientForm">
-                        <div class="form-row">
-                            <input type="text" id="patientName" placeholder="Full Name" required>
-                            <select id="patientGender" required>
-                                <option value="">Select Gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Other</option>
-                            </select>
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 5000);
+}
+
+function showLoading(show = true) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = show ? 'flex' : 'none';
+    }
+}
+
+function showSection(sectionId) {
+    // Hide all sections
+    const sections = document.querySelectorAll('.content-section');
+    sections.forEach(section => section.classList.remove('active'));
+    
+    // Show selected section
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+    
+    // Update navigation active state
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => item.classList.remove('active'));
+    
+    // Find and activate the corresponding nav item
+    const activeNavItem = document.querySelector(`[onclick="showSection('${sectionId}')"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
+}
+
+// Enhanced Authentication Functions
+async function loginUser(username, password) {
+    try {
+        showLoading(true);
+        
+        const response = await enhancedApiCall('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password })
+        });
+        
+        if (response.success) {
+            currentUser = response.user;
+            showMessage(`Welcome, ${currentUser.full_name}!`, 'success');
+            
+            // Update UI for logged-in user
+            updateUIForLoggedInUser();
+            
+            // Show dashboard
+            showSection('dashboard');
+            loadDashboardData();
+            
+        } else {
+            showMessage(response.error || 'Login failed', 'error');
+        }
+        
+    } catch (error) {
+        showMessage('Login failed: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function logout() {
+    enhancedApiCall('/auth/logout', { method: 'POST' })
+        .then(() => {
+            currentUser = null;
+            showMessage('Logged out successfully', 'success');
+            updateUIForLoggedOutUser();
+            showSection('welcome');
+        })
+        .catch(error => {
+            console.error('Logout error:', error);
+        });
+}
+
+function updateUIForLoggedInUser() {
+    // Hide login nav, show dashboard navs
+    document.getElementById('login-nav').style.display = 'none';
+    document.getElementById('dashboard-nav').style.display = 'block';
+    document.getElementById('patient-management-nav').style.display = 'block';
+    document.getElementById('consultations-nav').style.display = 'block';
+    
+    // Update header
+    const statusText = document.querySelector('.status-text');
+    if (statusText) {
+        statusText.textContent = `Logged in as ${currentUser.role}`;
+    }
+}
+
+function updateUIForLoggedOutUser() {
+    // Show login nav, hide dashboard navs
+    document.getElementById('login-nav').style.display = 'block';
+    document.getElementById('dashboard-nav').style.display = 'none';
+    document.getElementById('patient-management-nav').style.display = 'none';
+    document.getElementById('consultations-nav').style.display = 'none';
+    
+    // Update header
+    const statusText = document.querySelector('.status-text');
+    if (statusText) {
+        statusText.textContent = 'System Online';
+    }
+}
+
+// Dashboard Functions
+async function loadDashboardData() {
+    try {
+        const [statsResponse, diseasesResponse, consultationsResponse] = await Promise.all([
+            enhancedApiCall('/analytics/dashboard'),
+            enhancedApiCall('/diseases'),
+            enhancedApiCall('/consultations')
+        ]);
+        
+        if (statsResponse.success) {
+            displayDashboardStats(statsResponse.analytics);
+        }
+        
+        if (diseasesResponse.success) {
+            displayCommonDiseases(diseasesResponse.diseases);
+        }
+        
+        if (consultationsResponse.success) {
+            displayRecentConsultations(consultationsResponse.consultations);
+        }
+        
+    } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        showMessage('Failed to load dashboard data', 'error');
+    }
+}
+
+function displayDashboardStats(analytics) {
+    const statsContent = document.getElementById('statsContent');
+    if (!statsContent) return;
+    
+    statsContent.innerHTML = `
+        <div class="stat-item">
+            <span class="stat-number">${analytics.total_patients || 0}</span>
+            <span class="stat-label">Total Patients</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">${analytics.today_consultations || 0}</span>
+            <span class="stat-label">Today's Consultations</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">${analytics.month_consultations || 0}</span>
+            <span class="stat-label">This Month</span>
+        </div>
+    `;
+}
+
+function displayCommonDiseases(diseases) {
+    const diseasesContent = document.getElementById('diseasesContent');
+    if (!diseasesContent) return;
+    
+    const topDiseases = diseases.slice(0, 5);
+    diseasesContent.innerHTML = topDiseases.map(disease => `
+        <div class="disease-item">
+            <span class="disease-name">${disease.disease_name}</span>
+            <span class="disease-description">${disease.description || 'No description available'}</span>
+        </div>
+    `).join('');
+}
+
+function displayRecentConsultations(consultations) {
+    const consultationsContent = document.getElementById('consultationsContent');
+    if (!consultationsContent) return;
+    
+    const recentConsultations = consultations.slice(0, 5);
+    consultationsContent.innerHTML = recentConsultations.map(consultation => `
+        <div class="consultation-item">
+            <span class="consultation-date">${new Date(consultation.consultation_date).toLocaleDateString()}</span>
+            <span class="consultation-patient">${consultation.patient_name || 'Unknown'}</span>
+            <span class="consultation-status">${consultation.status}</span>
+        </div>
+    `).join('');
+}
+
+// Patient Management Functions
+async function loadPatients() {
+    try {
+        showLoading(true);
+        
+        const response = await enhancedApiCall('/patients');
+        
+        if (response.success) {
+            displayPatients(response.patients);
+        } else {
+            showMessage('Failed to load patients', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Failed to load patients:', error);
+        showMessage('Failed to load patients: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayPatients(patients) {
+    const patientsList = document.getElementById('patientsList');
+    if (!patientsList) return;
+    
+    if (patients.length === 0) {
+        patientsList.innerHTML = '<div class="no-data">No patients found</div>';
+        return;
+    }
+    
+    patientsList.innerHTML = patients.map(patient => `
+        <div class="patient-card" onclick="viewPatientDetails('${patient.registration_id}')">
+            <div class="patient-header">
+                <h4>${patient.name}</h4>
+                <span class="patient-id">ID: ${patient.registration_id}</span>
+            </div>
+            <div class="patient-info">
+                <p><strong>Age:</strong> ${patient.age} | <strong>Gender:</strong> ${patient.gender}</p>
+                <p><strong>Contact:</strong> ${patient.contact}</p>
+                <p><strong>Consultations:</strong> ${patient.consultation_count}</p>
+                <p><strong>Last Visit:</strong> ${patient.last_visit ? new Date(patient.last_visit).toLocaleDateString() : 'Never'}</p>
+            </div>
+            <div class="patient-actions">
+                <button onclick="viewPatientSummary('${patient.registration_id}')" class="action-btn">
+                    View Summary
+                </button>
+                <button onclick="viewPatientConsultations('${patient.registration_id}')" class="action-btn">
+                    Consultations
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function viewPatientSummary(patientId) {
+    try {
+        showLoading(true);
+        
+        const response = await enhancedApiCall(`/patients/${patientId}/summary`);
+        
+        if (response.success) {
+            displayPatientSummary(response);
+            showSection('consultations');
+        } else {
+            showMessage('Failed to load patient summary', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Failed to load patient summary:', error);
+        showMessage('Failed to load patient summary: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayPatientSummary(data) {
+    const consultationsList = document.getElementById('consultationsList');
+    if (!consultationsList) return;
+    
+    consultationsList.innerHTML = `
+        <div class="patient-summary">
+            <h3>Patient Summary: ${data.patient.name}</h3>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>Patient Information</h4>
+                    <p><strong>ID:</strong> ${data.patient.registration_id}</p>
+                    <p><strong>Age:</strong> ${data.patient.age}</p>
+                    <p><strong>Gender:</strong> ${data.patient.gender}</p>
+                    <p><strong>Contact:</strong> ${data.patient.contact}</p>
+                </div>
+                <div class="summary-card">
+                    <h4>Consultation History</h4>
+                    <p><strong>Total Consultations:</strong> ${data.total_consultations}</p>
+                    <p><strong>Last Visit:</strong> ${data.consultations.length > 0 ? new Date(data.consultations[0].date).toLocaleDateString() : 'Never'}</p>
+                </div>
+            </div>
+            
+            <h4>Recent Consultations</h4>
+            <div class="consultations-list">
+                ${data.consultations.map(consultation => `
+                    <div class="consultation-card">
+                        <div class="consultation-header">
+                            <span class="consultation-date">${new Date(consultation.date).toLocaleDateString()}</span>
+                            <span class="consultation-confidence">${(consultation.confidence * 100).toFixed(1)}%</span>
+                            <span class="consultation-status ${consultation.status}">${consultation.status}</span>
                         </div>
-                        <div class="form-row">
-                            <input type="number" id="patientAge" placeholder="Age" min="1" max="120" required>
-                            <input type="tel" id="patientContact" placeholder="Contact Number" required>
+                        <div class="consultation-symptoms">
+                            <strong>Symptoms:</strong> ${consultation.symptoms.join(', ')}
                         </div>
-                        <button type="submit" class="action-btn"><i class="fas fa-user-plus"></i> Register Patient</button>
-                    </form>
-                </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
 
-                <!-- Symptom Input Section -->
-                <div class="symptom-input-section" style="display: none;">
-                    <h3><i class="fas fa-notes-medical"></i> Enter Your Symptoms</h3>
-                    <div class="symptom-search">
-                        <input type="text" id="symptomSearch" placeholder="Type symptom (e.g., fever, cough)">
-                        <div id="symptomSuggestions" class="symptom-suggestions"></div>
-                    </div>
-                    <div class="selected-symptoms">
-                        <h4>Selected Symptoms:</h4>
-                        <div id="selectedSymptomsList"></div>
-                    </div>
-                    <button id="analyzeBtn" class="action-btn" disabled><i class="fas fa-search"></i> Analyze Symptoms</button>
-                </div>
+async function viewPatientConsultations(patientId) {
+    try {
+        showLoading(true);
+        
+        const response = await enhancedApiCall(`/consultations/${patientId}`);
+        
+        if (response.success) {
+            displayPatientConsultations(response.consultations, patientId);
+            showSection('consultations');
+        } else {
+            showMessage('Failed to load consultations', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Failed to load consultations:', error);
+        showMessage('Failed to load consultations: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
 
-                <div id="diagnosisResult" class="result-container"></div>
-            </div>
-        `;
-        
-        // Add event listeners
-        setupPatientForm();
-        setupSymptomInput();
-        
-        // Close sidebar on mobile after selection
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-    });
+function displayPatientConsultations(consultations, patientId) {
+    const consultationsList = document.getElementById('consultationsList');
+    if (!consultationsList) return;
     
-    // Medications button click event
-    medicationBtn.addEventListener('click', function() {
-        mainContent.innerHTML = `
-            <div class="section-content">
-                <h2><i class="fas fa-pills"></i> Medication Guide</h2>
-                <p>Search for medications by disease or browse common medications below.</p>
-                <div class="input-container">
-                    <input type="text" id="medicationSearch" placeholder="Search by disease (e.g., Pneumonia, COVID-19)">
-                    <button class="action-btn" onclick="searchMedications()"><i class="fas fa-search"></i> Search</button>
-                </div>
-                <div id="medicationsList" class="medications-list">
-                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading medications...</div>
-                </div>
-            </div>
-        `;
-        
-        // Load all diseases and medications
-        loadDiseasesAndMedications();
-        
-        // Close sidebar on mobile after selection
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-    });
+    if (consultations.length === 0) {
+        consultationsList.innerHTML = '<div class="no-data">No consultations found for this patient</div>';
+        return;
+    }
     
-    // Precautions button click event
-    precautionBtn.addEventListener('click', function() {
-        mainContent.innerHTML = `
-            <div class="section-content">
-                <h2><i class="fas fa-shield-alt"></i> Precautions</h2>
-                <p>Learn about preventive measures for various diseases.</p>
-                <div id="precautionsList" class="precautions-list">
-                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading precautions...</div>
-                </div>
-            </div>
-        `;
+    consultationsList.innerHTML = `
+        <div class="consultations-header">
+            <h3>Consultation History</h3>
+            <button onclick="createNewConsultation('${patientId}')" class="action-button">
+                New Consultation
+            </button>
+        </div>
         
-        // Load all diseases and precautions
-        loadDiseasesAndPrecautions();
-        
-        // Close sidebar on mobile after selection
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-    });
-    
-    // Patient History button click event
-    historyBtn.addEventListener('click', function() {
-        mainContent.innerHTML = `
-            <div class="section-content">
-                <h2><i class="fas fa-history"></i> Patient History</h2>
-                <p>View your previous diagnoses and consultations.</p>
-                <div class="history-list">
-                    <div class="history-card">
-                        <div class="history-date">Coming Soon</div>
-                        <h3>Patient History Feature</h3>
-                        <p>This feature will be available in the next update to track patient consultation history.</p>
+        <div class="consultations-grid">
+            ${consultations.map(consultation => `
+                <div class="consultation-card">
+                    <div class="consultation-header">
+                        <span class="consultation-date">${new Date(consultation.consultation_date).toLocaleDateString()}</span>
+                        <span class="consultation-time">${new Date(consultation.consultation_date).toLocaleTimeString()}</span>
+                        <span class="consultation-status ${consultation.status}">${consultation.status}</span>
+                    </div>
+                    
+                    <div class="consultation-details">
+                        <div class="consultation-section">
+                            <h5>Symptoms Analyzed</h5>
+                            <div class="symptoms-list">
+                                ${consultation.symptoms_analyzed.map(symptom => 
+                                    `<span class="symptom-tag">${symptom}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="consultation-section">
+                            <h5>Diagnosis Results</h5>
+                            <div class="diagnosis-summary">
+                                ${consultation.diagnosis_results && consultation.diagnosis_results.top_disease ? 
+                                    `<strong>Primary Diagnosis:</strong> ${consultation.diagnosis_results.top_disease.name}<br>
+                                     <strong>Confidence:</strong> ${(consultation.confidence_score * 100).toFixed(1)}%` :
+                                    'No diagnosis available'
+                                }
+                            </div>
+                        </div>
+                        
+                        ${consultation.doctor_notes ? `
+                            <div class="consultation-section">
+                                <h5>Doctor Notes</h5>
+                                <p>${consultation.doctor_notes}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${consultation.follow_up_date ? `
+                            <div class="consultation-section">
+                                <h5>Follow-up Date</h5>
+                                <p>${new Date(consultation.follow_up_date).toLocaleDateString()}</p>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
-            </div>
-        `;
-        
-        // Close sidebar on mobile after selection
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-    });
-    
-    // About System button click event
-    aboutBtn.addEventListener('click', function() {
-        mainContent.innerHTML = `
-            <div class="section-content about-section">
-                <h2><i class="fas fa-info-circle"></i> About MediCare Hospital System</h2>
-                <p>MediCare Hospital System is an intelligent healthcare platform designed to help diagnose diseases based on symptoms and provide medication recommendations.</p>
-                <div class="about-details">
-                    <div class="about-card">
-                        <i class="fas fa-brain"></i>
-                        <h3>AI-Powered Diagnosis</h3>
-                        <p>Our system uses advanced algorithms to analyze symptoms and provide accurate disease predictions based on medical databases.</p>
-                    </div>
-                    <div class="about-card">
-                        <i class="fas fa-database"></i>
-                        <h3>Comprehensive Database</h3>
-                        <p>Access information on various diseases, medications, and precautions from our extensive medical database.</p>
-                    </div>
-                    <div class="about-card">
-                        <i class="fas fa-user-md"></i>
-                        <h3>Medical Expertise</h3>
-                        <p>Developed in collaboration with healthcare professionals to ensure accuracy and reliability.</p>
-                    </div>
-                </div>
-                <div class="disclaimer-box">
-                    <h3><i class="fas fa-exclamation-triangle"></i> Important Disclaimer</h3>
-                    <p>This system is designed to assist with preliminary diagnosis and should not replace professional medical advice. Always consult with a qualified healthcare provider for proper diagnosis and treatment.</p>
-                </div>
-            </div>
-        `;
-        
-        // Close sidebar on mobile after selection
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-    });
-});
+            `).join('')}
+        </div>
+    `;
+}
 
-// Setup patient registration form
-function setupPatientForm() {
+// Existing Functions (Enhanced)
+async function setupPatientForm() {
     const form = document.getElementById('patientForm');
-    form.addEventListener('submit', async function(e) {
+    if (!form) return;
+    
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const formData = {
-            name: document.getElementById('patientName').value,
-            gender: document.getElementById('patientGender').value,
-            age: parseInt(document.getElementById('patientAge').value),
-            contact: document.getElementById('patientContact').value
+        const formData = new FormData(form);
+        const patientData = {
+            name: formData.get('name'),
+            age: parseInt(formData.get('age')),
+            gender: formData.get('gender'),
+            contact: formData.get('contact')
         };
         
         try {
+            showLoading(true);
+            
             const response = await apiCall('/patient/register', {
                 method: 'POST',
-                body: JSON.stringify(formData)
+                body: JSON.stringify(patientData)
             });
             
             if (response.success) {
-                // Store registration ID
-                localStorage.setItem('currentPatientId', response.registration_id);
+                currentPatientId = response.registration_id;
+                localStorage.setItem('currentPatientId', currentPatientId);
                 
-                // Show success message and enable symptom input
-                showMessage(`✅ Patient registered successfully! ID: ${response.registration_id}`, 'success');
+                showMessage(`Patient registered successfully! ID: ${response.registration_id}`, 'success');
                 
-                // Hide form and show symptom input
-                document.querySelector('.patient-form').style.display = 'none';
-                document.querySelector('.symptom-input-section').style.display = 'block';
+                // Show registration result
+                const resultDiv = document.getElementById('registrationResult');
+                if (resultDiv) {
+                    resultDiv.innerHTML = `
+                        <div class="success-message">
+                            <h3>✅ Registration Successful!</h3>
+                            <p><strong>Patient ID:</strong> ${response.registration_id}</p>
+                            <p><strong>Name:</strong> ${patientData.name}</p>
+                            <p>You can now proceed to symptom analysis.</p>
+                            <button onclick="showSection('symptom-analysis')" class="action-button">
+                                Continue to Symptoms
+                            </button>
+                        </div>
+                    `;
+                    resultDiv.style.display = 'block';
+                }
                 
-                // Load available symptoms
-                loadAvailableSymptoms();
+                // Reset form
+                form.reset();
+                
             } else {
-                showMessage(`❌ Registration failed: ${response.error}`, 'error');
+                showMessage(response.error || 'Registration failed', 'error');
             }
+            
         } catch (error) {
-            showMessage(`❌ Registration failed: ${error.message}`, 'error');
+            console.error('Registration error:', error);
+            showMessage('Registration failed: ' + error.message, 'error');
+        } finally {
+            showLoading(false);
         }
     });
 }
 
-// Setup symptom input functionality
-function setupSymptomInput() {
-    const symptomSearch = document.getElementById('symptomSearch');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    let selectedSymptoms = [];
-    
-    // Symptom search with suggestions
-    symptomSearch.addEventListener('input', async function() {
-        const query = this.value.trim();
-        if (query.length < 2) {
-            document.getElementById('symptomSuggestions').innerHTML = '';
-            return;
-        }
-        
-        try {
-            const response = await apiCall(`/symptoms/suggest?q=${encodeURIComponent(query)}`);
-            if (response.success) {
-                displaySymptomSuggestions(response.suggestions);
-            }
-        } catch (error) {
-            console.error('Failed to get symptom suggestions:', error);
-        }
-    });
-    
-    // Analyze symptoms button
-    analyzeBtn.addEventListener('click', async function() {
-        if (selectedSymptoms.length === 0) {
-            showMessage('❌ Please select at least one symptom', 'error');
-            return;
-        }
-        
-        try {
-            const response = await apiCall('/diagnose', {
-                method: 'POST',
-                body: JSON.stringify({ symptoms: selectedSymptoms })
-            });
-            
-            if (response.success) {
-                displayDiagnosisResults(response.diagnosis, selectedSymptoms);
-            } else {
-                showMessage(`❌ Diagnosis failed: ${response.error}`, 'error');
-            }
-        } catch (error) {
-            showMessage(`❌ Diagnosis failed: ${error.message}`, 'error');
-        }
-    });
-}
-
-// Display symptom suggestions
-function displaySymptomSuggestions(suggestions) {
+async function setupSymptomInput() {
+    const searchInput = document.getElementById('symptomSearch');
     const suggestionsDiv = document.getElementById('symptomSuggestions');
-    suggestionsDiv.innerHTML = '';
     
-    suggestions.forEach(symptom => {
-        const div = document.createElement('div');
-        div.className = 'symptom-suggestion';
-        div.textContent = symptom;
-        div.onclick = () => addSymptom(symptom);
-        suggestionsDiv.appendChild(div);
+    if (!searchInput || !suggestionsDiv) return;
+    
+    // Load available symptoms
+    await loadAvailableSymptoms();
+    
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        if (query.length > 0) {
+            displaySymptomSuggestions(query);
+        } else {
+            suggestionsDiv.style.display = 'none';
+        }
+    });
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            suggestionsDiv.style.display = 'none';
+        }
     });
 }
 
-// Add symptom to selected list
-function addSymptom(symptom) {
-    const selectedSymptomsList = document.getElementById('selectedSymptomsList');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    
-    if (!selectedSymptoms.includes(symptom)) {
-        selectedSymptoms.push(symptom);
-        
-        const symptomTag = document.createElement('span');
-        symptomTag.className = 'symptom-tag';
-        symptomTag.innerHTML = `${symptom} <i class="fas fa-times" onclick="removeSymptom('${symptom}', this)"></i>`;
-        selectedSymptomsList.appendChild(symptomTag);
-        
-        // Enable analyze button
-        analyzeBtn.disabled = false;
-        
-        // Clear search
-        document.getElementById('symptomSearch').value = '';
-        document.getElementById('symptomSuggestions').innerHTML = '';
-    }
-}
-
-// Remove symptom from selected list
-function removeSymptom(symptom, element) {
-    selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
-    element.parentElement.remove();
-    
-    // Disable analyze button if no symptoms
-    if (selectedSymptoms.length === 0) {
-        document.getElementById('analyzeBtn').disabled = true;
-    }
-}
-
-// Load available symptoms
 async function loadAvailableSymptoms() {
     try {
         const response = await apiCall('/symptoms');
         if (response.success) {
-            console.log(`Loaded ${response.count} available symptoms`);
+            availableSymptoms = response.symptoms;
         }
     } catch (error) {
         console.error('Failed to load symptoms:', error);
     }
 }
 
-// Display diagnosis results
-function displayDiagnosisResults(diagnosis, symptoms) {
+function displaySymptomSuggestions(query) {
+    const suggestionsDiv = document.getElementById('symptomSuggestions');
+    if (!suggestionsDiv) return;
+    
+    const filteredSymptoms = availableSymptoms.filter(symptom => 
+        symptom.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    if (filteredSymptoms.length > 0) {
+        suggestionsDiv.innerHTML = filteredSymptoms.map(symptom => 
+            `<div class="suggestion-item" onclick="addSymptom('${symptom}')">${symptom}</div>`
+        ).join('');
+        suggestionsDiv.style.display = 'block';
+    } else {
+        suggestionsDiv.style.display = 'none';
+    }
+}
+
+function addSymptom(symptom) {
+    if (!selectedSymptoms.includes(symptom)) {
+        selectedSymptoms.push(symptom);
+        updateSelectedSymptomsDisplay();
+        updateAnalyzeButton();
+    }
+    
+    // Clear search and hide suggestions
+    const searchInput = document.getElementById('symptomSearch');
+    const suggestionsDiv = document.getElementById('symptomSuggestions');
+    if (searchInput) searchInput.value = '';
+    if (suggestionsDiv) suggestionsDiv.style.display = 'none';
+}
+
+function removeSymptom(symptom) {
+    selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+    updateSelectedSymptomsDisplay();
+    updateAnalyzeButton();
+}
+
+function updateSelectedSymptomsDisplay() {
+    const symptomsList = document.getElementById('selectedSymptomsList');
+    if (!symptomsList) return;
+    
+    symptomsList.innerHTML = selectedSymptoms.map(symptom => `
+        <span class="symptom-tag">
+            ${symptom}
+            <button onclick="removeSymptom('${symptom}')" class="remove-symptom">×</button>
+        </span>
+    `).join('');
+}
+
+function updateAnalyzeButton() {
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) {
+        analyzeBtn.disabled = selectedSymptoms.length === 0;
+    }
+}
+
+async function analyzeSymptoms() {
+    if (selectedSymptoms.length === 0) {
+        showMessage('Please select at least one symptom', 'error');
+        return;
+    }
+    
+    if (!currentPatientId) {
+        showMessage('Please register as a patient first', 'error');
+        return;
+    }
+    
+    try {
+        showLoading(true);
+        
+        const response = await apiCall('/diagnose', {
+            method: 'POST',
+            body: JSON.stringify({
+                symptoms: selectedSymptoms,
+                patient_id: currentPatientId
+            })
+        });
+        
+        if (response.success) {
+            displayDiagnosisResults(response.results);
+            
+            // Create consultation record
+            if (currentUser && ['doctor', 'nurse', 'admin'].includes(currentUser.role)) {
+                await createConsultationRecord(response.results);
+            }
+            
+        } else {
+            showMessage(response.error || 'Diagnosis failed', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Diagnosis error:', error);
+        showMessage('Diagnosis failed: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function createConsultationRecord(diagnosisResults) {
+    try {
+        const consultationData = {
+            patient_id: currentPatientId,
+            symptoms: selectedSymptoms,
+            diagnosis_results: diagnosisResults,
+            confidence_score: diagnosisResults.top_disease ? diagnosisResults.top_disease.confidence : 0.0,
+            doctor_notes: `Diagnosis performed by ${currentUser.full_name} (${currentUser.role})`,
+            follow_up_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 1 week from now
+        };
+        
+        await enhancedApiCall('/consultations', {
+            method: 'POST',
+            body: JSON.stringify(consultationData)
+        });
+        
+        showMessage('Consultation record created successfully', 'success');
+        
+    } catch (error) {
+        console.error('Failed to create consultation record:', error);
+    }
+}
+
+function displayDiagnosisResults(results) {
     const resultDiv = document.getElementById('diagnosisResult');
+    if (!resultDiv) return;
     
-    let html = `
+    const topDisease = results.top_disease;
+    
+    resultDiv.innerHTML = `
         <div class="diagnosis-summary">
-            <h3><i class="fas fa-clipboard-list"></i> Analysis Summary</h3>
-            <p><strong>Symptoms analyzed:</strong> ${symptoms.join(', ')}</p>
-            <p><strong>Diseases found:</strong> ${diagnosis.length}</p>
-        </div>
-    `;
-    
-    diagnosis.forEach((result, index) => {
-        const disease = result.disease;
-        html += `
-            <div class="diagnosis-card">
-                <h3><i class="fas fa-heartbeat"></i> ${index + 1}. ${disease.name} (Score: ${result.weighted_score}%)</h3>
-                <p class="diagnosis-description">${disease.description}</p>
+            <h3>🔍 Diagnosis Results</h3>
+            ${topDisease ? `
+                <div class="primary-diagnosis">
+                    <h4>Primary Diagnosis: ${topDisease.name}</h4>
+                    <p><strong>Confidence:</strong> ${(topDisease.confidence * 100).toFixed(1)}%</p>
+                    <p><strong>Description:</strong> ${topDisease.description || 'No description available'}</p>
+                </div>
+                
                 <div class="diagnosis-details">
-                    <div class="detail-section">
-                        <h4><i class="fas fa-check-circle"></i> Matched Symptoms:</h4>
-                        <p>${result.matched_symptoms.join(', ')}</p>
-                        <p><strong>Match percentage:</strong> ${result.match_percentage}%</p>
+                    <h4>Matched Symptoms:</h4>
+                    <div class="matched-symptoms">
+                        ${topDisease.matched_symptoms.map(symptom => 
+                            `<span class="symptom-tag matched">${symptom}</span>`
+                        ).join('')}
                     </div>
                     
-                    ${result.medicines.length > 0 ? `
-                        <div class="detail-section">
-                            <h4><i class="fas fa-pills"></i> Recommended Medications:</h4>
-                            <ul>
-                                ${result.medicines.map(med => `<li><strong>${med.name}</strong> - ${med.dosage}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
+                    <h4>Medications:</h4>
+                    <div class="medications-list">
+                        ${topDisease.medicines.map(medicine => 
+                            `<div class="medicine-item">
+                                <strong>${medicine.name}</strong> - ${medicine.dosage}
+                            </div>`
+                        ).join('')}
+                    </div>
                     
-                    ${result.precautions.length > 0 ? `
-                        <div class="detail-section">
-                            <h4><i class="fas fa-shield-alt"></i> Recommended Precautions:</h4>
-                            <ul>
-                                ${result.precautions.map(precaution => `<li>${precaution}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
+                    <h4>Precautions:</h4>
+                    <div class="precautions-list">
+                        ${topDisease.precautions.map(precaution => 
+                            `<div class="precaution-item">• ${precaution}</div>`
+                        ).join('')}
+                    </div>
                 </div>
-            </div>
-        `;
-    });
-    
-    html += `
-        <div class="disclaimer">
-            <p><i class="fas fa-exclamation-triangle"></i> <strong>Note:</strong> This is a preliminary diagnosis based on symptom analysis. Please consult with a healthcare professional for proper medical advice and treatment.</p>
+            ` : `
+                <div class="no-diagnosis">
+                    <p>No specific diagnosis found for the given symptoms.</p>
+                    <p>Please consult a healthcare professional for proper evaluation.</p>
+                </div>
+            `}
         </div>
     `;
     
-    resultDiv.innerHTML = html;
+    resultDiv.style.display = 'block';
 }
 
-// Load diseases and medications
-async function loadDiseasesAndMedications() {
-    try {
-        const response = await apiCall('/diseases');
-        if (response.success) {
-            displayMedications(response.diseases);
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Enhanced Patient Diagnosis System Loaded!');
+    
+    // Setup existing features
+    setupPatientForm();
+    setupSymptomInput();
+    
+    // Setup new features
+    setupLoginForm();
+    setupPatientSearch();
+    
+    // Check if user is already logged in
+    checkAuthStatus();
+    
+    // Show welcome section by default
+    showSection('welcome');
+});
+
+function setupLoginForm() {
+    const loginForm = document.getElementById('loginForm');
+    if (!loginForm) return;
+    
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(loginForm);
+        const username = formData.get('username');
+        const password = formData.get('password');
+        
+        await loginUser(username, password);
+    });
+}
+
+function setupPatientSearch() {
+    const searchInput = document.getElementById('patientSearchInput');
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        if (query.length > 0) {
+            // Implement search functionality
+            filterPatients(query);
+        } else {
+            loadPatients();
         }
+    });
+}
+
+async function filterPatients(query) {
+    try {
+        const response = await enhancedApiCall('/patients');
+        
+        if (response.success) {
+            const filteredPatients = response.patients.filter(patient => 
+                patient.name.toLowerCase().includes(query.toLowerCase()) ||
+                patient.registration_id.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            displayPatients(filteredPatients);
+        }
+        
     } catch (error) {
-        document.getElementById('medicationsList').innerHTML = `<div class="error">❌ Failed to load medications: ${error.message}</div>`;
+        console.error('Search failed:', error);
     }
 }
 
-// Display medications
-function displayMedications(diseases) {
-    const container = document.getElementById('medicationsList');
-    
-    let html = '';
-    diseases.forEach(disease => {
-        html += `
-            <div class="medication-card">
-                <h3>${disease.name}</h3>
-                <p class="disease-description">${disease.description}</p>
-                <div class="medication-info">
-                    <p><i class="fas fa-info-circle"></i> Click to view medications</p>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-}
-
-// Load diseases and precautions
-async function loadDiseasesAndPrecautions() {
+async function checkAuthStatus() {
     try {
-        const response = await apiCall('/diseases');
+        const response = await enhancedApiCall('/auth/profile');
+        
         if (response.success) {
-            displayPrecautions(response.diseases);
+            currentUser = response.user;
+            updateUIForLoggedInUser();
         }
+        
     } catch (error) {
-        document.getElementById('precautionsList').innerHTML = `<div class="error">❌ Failed to load precautions: ${error.message}</div>`;
+        // User not logged in, keep default UI
+        console.log('User not authenticated');
     }
 }
 
-// Display precautions
-function displayPrecautions(diseases) {
-    const container = document.getElementById('precautionsList');
+// Mobile sidebar toggle
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContainer = document.querySelector('.main-container');
     
-    let html = '';
-    diseases.forEach(disease => {
-        html += `
-            <div class="precaution-card">
-                <h3>${disease.name}</h3>
-                <p class="disease-description">${disease.description}</p>
-                <div class="precaution-info">
-                    <p><i class="fas fa-info-circle"></i> Click to view precautions</p>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
+    if (sidebar && mainContainer) {
+        sidebar.classList.toggle('sidebar-open');
+        mainContainer.classList.toggle('sidebar-open');
+    }
 }
 
-// Show message to user
-function showMessage(message, type = 'info') {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
-    
-    document.body.appendChild(messageDiv);
-    
-    // Remove message after 5 seconds
-    setTimeout(() => {
-        messageDiv.remove();
-    }, 5000);
-}
+// Export functions for global access
+window.showSection = showSection;
+window.analyzeSymptoms = analyzeSymptoms;
+window.logout = logout;
+window.viewPatientDetails = viewPatientSummary;
+window.viewPatientSummary = viewPatientSummary;
+window.viewPatientConsultations = viewPatientConsultations;
+window.createNewConsultation = (patientId) => {
+    showMessage('New consultation feature coming soon!', 'info');
+};
+window.toggleSidebar = toggleSidebar;

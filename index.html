@@ -11,143 +11,280 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Header Section -->
+    <!-- Header -->
     <header class="header">
-        <div class="header-content">
-            <div class="logo-section">
-                <div class="logo">
-                    <i class="fas fa-hospital-alt"></i>
-                </div>
-                <div class="logo-text">
-                    <h1>MediCare Hospital System</h1>
-                    <p>AI-Powered Medical Diagnosis & Care</p>
-                </div>
-            </div>
-            <div class="header-actions">
-                <div class="status-indicator">
-                    <i class="fas fa-circle"></i>
-                    <span>System Online</span>
-                </div>
-            </div>
+        <div class="logo-section">
+            <h1>🏥 MediCare</h1>
+            <p>AI-Powered Patient Diagnosis System</p>
+        </div>
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">System Online</span>
         </div>
     </header>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 
     <!-- Main Container -->
     <div class="main-container">
         <!-- Sidebar Navigation -->
-        <nav class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h3><i class="fas fa-stethoscope"></i> Medical Dashboard</h3>
-                <button class="close-sidebar" onclick="toggleSidebar()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="nav-menu">
-                <div class="nav-item">
-                    <button id="symptomBtn" class="nav-button active">
-                        <i class="fas fa-notes-medical"></i>
-                        <span>Symptom Analysis</span>
-                        <div class="nav-description">AI-powered disease diagnosis</div>
-                    </button>
+        <nav class="sidebar">
+            <div class="nav-section">
+                <h3>Patient Services</h3>
+                <div class="nav-item" onclick="showSection('welcome')">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Home</span>
+                    <span class="nav-desc">Start your diagnosis journey</span>
                 </div>
-                
-                <div class="nav-item">
-                    <button id="medicationBtn" class="nav-button">
-                        <i class="fas fa-pills"></i>
-                        <span>Medications</span>
-                        <div class="nav-description">Browse medicines by disease</div>
-                    </button>
+                <div class="nav-item" onclick="showSection('patient-registration')">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Patient Registration</span>
+                    <span class="nav-desc">Register as a new patient</span>
                 </div>
-                
-                <div class="nav-item">
-                    <button id="precautionBtn" class="nav-button">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Precautions</span>
-                        <div class="nav-description">Safety measures & guidelines</div>
-                    </button>
-                </div>
-                
-                <div class="nav-item">
-                    <button id="historyBtn" class="nav-button">
-                        <i class="fas fa-history"></i>
-                        <span>Patient History</span>
-                        <div class="nav-description">View consultation records</div>
-                    </button>
-                </div>
-                
-                <div class="nav-item">
-                    <button id="aboutBtn" class="nav-button">
-                        <i class="fas fa-info-circle"></i>
-                        <span>About System</span>
-                        <div class="nav-description">Learn about our platform</div>
-                    </button>
+                <div class="nav-item" onclick="showSection('symptom-analysis')">
+                    <span class="nav-icon">🔍</span>
+                    <span class="nav-text">Symptom Analysis</span>
+                    <span class="nav-desc">Get AI-powered diagnosis</span>
                 </div>
             </div>
-            
+
+            <div class="nav-section">
+                <h3>Medical Staff</h3>
+                <div class="nav-item" onclick="showSection('login')" id="login-nav">
+                    <span class="nav-icon">🔐</span>
+                    <span class="nav-text">Staff Login</span>
+                    <span class="nav-desc">Access medical dashboard</span>
+                </div>
+                <div class="nav-item" onclick="showSection('dashboard')" id="dashboard-nav" style="display: none;">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                    <span class="nav-desc">View patient analytics</span>
+                </div>
+                <div class="nav-item" onclick="showSection('patient-management')" id="patient-management-nav" style="display: none;">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Patient Management</span>
+                    <span class="nav-desc">Manage patient records</span>
+                </div>
+                <div class="nav-item" onclick="showSection('consultations')" id="consultations-nav" style="display: none;">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Consultations</span>
+                    <span class="nav-desc">View consultation history</span>
+                </div>
+            </div>
+
             <div class="sidebar-footer">
-                <div class="system-info">
-                    <p><i class="fas fa-code"></i> v1.0.0</p>
-                    <p><i class="fas fa-database"></i> MySQL Database</p>
-                </div>
+                <p>MediCare v2.0</p>
+                <p>Advanced AI Diagnosis</p>
             </div>
         </nav>
 
-        <!-- Mobile Menu Toggle -->
-        <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-
         <!-- Main Content Area -->
-        <main class="main-content" id="mainContent">
+        <main class="main-content">
             <!-- Welcome Section -->
-            <div class="welcome-section">
-                <div class="welcome-content">
+            <div id="welcome" class="content-section active">
+                <div class="welcome-section">
                     <h2>Welcome to MediCare Hospital System</h2>
-                    <p>Experience the future of healthcare with our AI-powered diagnostic system that provides accurate disease predictions, personalized medication recommendations, and comprehensive care guidelines.</p>
+                    <p>Experience the future of healthcare with our AI-powered patient diagnosis system.</p>
                     
-                    <div class="welcome-features">
+                    <div class="features-grid">
                         <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-brain"></i>
-                            </div>
-                            <h3>AI-Powered Diagnosis</h3>
-                            <p>Advanced algorithms analyze symptoms to provide accurate disease predictions with confidence scores.</p>
+                            <span class="feature-icon">🤖</span>
+                            <h3>AI Diagnosis</h3>
+                            <p>Advanced symptom analysis with machine learning</p>
                         </div>
-                        
                         <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-pills"></i>
-                            </div>
-                            <h3>Smart Medication Guide</h3>
-                            <p>Get personalized medicine recommendations with proper dosages and administration guidelines.</p>
+                            <span class="feature-icon">📊</span>
+                            <h3>Smart Analytics</h3>
+                            <p>Comprehensive health insights and trends</p>
                         </div>
-                        
                         <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <h3>Comprehensive Precautions</h3>
-                            <p>Access detailed safety measures and preventive guidelines for various medical conditions.</p>
+                            <span class="feature-icon">🔒</span>
+                            <h3>Secure Records</h3>
+                            <p>HIPAA-compliant patient data management</p>
                         </div>
-                        
                         <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-user-md"></i>
-                            </div>
-                            <h3>Professional Database</h3>
-                            <p>Built on extensive medical knowledge with input from healthcare professionals.</p>
+                            <span class="feature-icon">📱</span>
+                            <h3>Easy Access</h3>
+                            <p>User-friendly interface for all users</p>
                         </div>
                     </div>
                     
-                    <div class="get-started">
-                        <h3>Ready to Get Started?</h3>
-                        <p>Click on "Symptom Analysis" in the sidebar to begin your diagnostic journey.</p>
-                        <button class="cta-button" onclick="document.getElementById('symptomBtn').click()">
-                            <i class="fas fa-play"></i>
-                            Start Diagnosis
-                        </button>
+                    <button class="cta-button" onclick="showSection('patient-registration')">
+                        Start Diagnosis
+                    </button>
+                </div>
+            </div>
+
+            <!-- Patient Registration Section -->
+            <div id="patient-registration" class="content-section">
+                <div class="section-header">
+                    <h2>Patient Registration</h2>
+                    <p>Register to start your diagnosis journey</p>
+                </div>
+                
+                <form id="patientForm" class="form-container">
+                    <div class="form-group">
+                        <label for="patientName">Full Name</label>
+                        <input type="text" id="patientName" name="name" required>
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patientAge">Age</label>
+                            <input type="number" id="patientAge" name="age" min="1" max="120" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientGender">Gender</label>
+                            <select id="patientGender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="patientContact">Contact Number</label>
+                        <input type="tel" id="patientContact" name="contact" required>
+                    </div>
+                    
+                    <button type="submit" class="submit-button">Register Patient</button>
+                </form>
+                
+                <div id="registrationResult" class="result-container" style="display: none;"></div>
+            </div>
+
+            <!-- Symptom Analysis Section -->
+            <div id="symptom-analysis" class="content-section">
+                <div class="section-header">
+                    <h2>Symptom Analysis</h2>
+                    <p>Describe your symptoms for AI-powered diagnosis</p>
+                </div>
+                
+                <div class="symptom-input-container">
+                    <div class="form-group">
+                        <label for="symptomSearch">Search Symptoms</label>
+                        <input type="text" id="symptomSearch" placeholder="Type to search symptoms..." autocomplete="off">
+                        <div id="symptomSuggestions" class="suggestions-dropdown"></div>
+                    </div>
+                    
+                    <div class="selected-symptoms">
+                        <h4>Selected Symptoms:</h4>
+                        <div id="selectedSymptomsList" class="symptoms-tags"></div>
+                    </div>
+                    
+                    <button id="analyzeBtn" class="submit-button" onclick="analyzeSymptoms()" disabled>
+                        Analyze Symptoms
+                    </button>
+                </div>
+                
+                <div id="diagnosisResult" class="result-container" style="display: none;"></div>
+            </div>
+
+            <!-- Staff Login Section -->
+            <div id="login" class="content-section">
+                <div class="section-header">
+                    <h2>Medical Staff Login</h2>
+                    <p>Access the medical dashboard and patient management tools</p>
+                </div>
+                
+                <form id="loginForm" class="form-container">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    
+                    <button type="submit" class="submit-button">Login</button>
+                </form>
+                
+                <div class="login-info">
+                    <h4>Sample Credentials:</h4>
+                    <div class="credentials-grid">
+                        <div class="credential-card">
+                            <strong>Admin:</strong> admin / admin123
+                        </div>
+                        <div class="credential-card">
+                            <strong>Doctor:</strong> dr.smith / doctor123
+                        </div>
+                        <div class="credential-card">
+                            <strong>Nurse:</strong> nurse.jones / nurse123
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="content-section">
+                <div class="section-header">
+                    <h2>Medical Dashboard</h2>
+                    <p>Overview of hospital operations and patient statistics</p>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>📊 Statistics</h3>
+                        <div id="statsContent">Loading...</div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3>🦠 Common Diseases</h3>
+                        <div id="diseasesContent">Loading...</div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3>📅 Recent Consultations</h3>
+                        <div id="consultationsContent">Loading...</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-actions">
+                    <button onclick="showSection('patient-management')" class="action-button">
+                        Manage Patients
+                    </button>
+                    <button onclick="showSection('consultations')" class="action-button">
+                        View Consultations
+                    </button>
+                    <button onclick="logout()" class="action-button secondary">
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Patient Management Section -->
+            <div id="patient-management" class="content-section">
+                <div class="section-header">
+                    <h2>Patient Management</h2>
+                    <p>View and manage patient records and consultation history</p>
+                </div>
+                
+                <div class="patient-search">
+                    <input type="text" id="patientSearchInput" placeholder="Search patients by name or ID..." class="search-input">
+                </div>
+                
+                <div id="patientsList" class="patients-grid">
+                    <div class="loading">Loading patients...</div>
+                </div>
+            </div>
+
+            <!-- Consultations Section -->
+            <div id="consultations" class="content-section">
+                <div class="section-header">
+                    <h2>Consultation History</h2>
+                    <p>View detailed consultation records and treatment plans</p>
+                </div>
+                
+                <div id="consultationsList" class="consultations-container">
+                    <div class="loading">Select a patient to view consultations...</div>
                 </div>
             </div>
         </main>
@@ -155,13 +292,10 @@
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p>Processing your request...</p>
-        </div>
+        <div class="loading-spinner"></div>
+        <p>Processing...</p>
     </div>
 
-    <!-- Scripts -->
     <script src="app.js"></script>
 </body>
 </html>
