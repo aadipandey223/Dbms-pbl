@@ -4,74 +4,164 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>MediCare Hospital System</title>
+    <title>MediCare Hospital System - AI-Powered Diagnosis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="heading">
-        <div class="logo">
-            <i class="fas fa-hospital"></i>
-        </div>
-        <h1>MediCare Hospital System</h1>
-    </div>
-    <div class="main">
-        <div class="menu" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
-        <div class="sidebar" id="sidebar">
-            <h3><i class="fas fa-stethoscope"></i> Dashboard</h3>
-            <div class="button">
-                <div class="btn">
-                    <button id="symptomBtn">
-                        <i class="fas fa-notes-medical"></i> Symptom Analysis
-                    </button>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">
+                    <i class="fas fa-hospital-alt"></i>
                 </div>
-                <div class="btn">
-                    <button id="medicationBtn">
-                        <i class="fas fa-pills"></i> Medications
-                    </button>
+                <div class="logo-text">
+                    <h1>MediCare Hospital System</h1>
+                    <p>AI-Powered Medical Diagnosis & Care</p>
                 </div>
-                <div class="btn">
-                    <button id="precautionBtn">
-                        <i class="fas fa-shield-alt"></i> Precautions
-                    </button>
-                </div>
-                <div class="btn">
-                    <button id="historyBtn">
-                        <i class="fas fa-history"></i> Patient History
-                    </button>
-                </div>
-                <div class="btn">
-                    <button id="aboutBtn">
-                        <i class="fas fa-info-circle"></i> About System
-                    </button>
+            </div>
+            <div class="header-actions">
+                <div class="status-indicator">
+                    <i class="fas fa-circle"></i>
+                    <span>System Online</span>
                 </div>
             </div>
         </div>
-        <div class="content" id="mainContent">
-            <div class="welcome-section">
-                <h2>Welcome to MediCare Hospital System</h2>
-                <p>This intelligent system helps diagnose diseases based on symptoms and provides medication recommendations.</p>
-                <div class="features">
-                    <div class="feature-card">
-                        <i class="fas fa-search-plus"></i>
-                        <h3>Symptom Analysis</h3>
-                        <p>Enter your symptoms to get a possible diagnosis</p>
-                    </div>
-                    <div class="feature-card">
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-stethoscope"></i> Medical Dashboard</h3>
+                <button class="close-sidebar" onclick="toggleSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="nav-menu">
+                <div class="nav-item">
+                    <button id="symptomBtn" class="nav-button active">
+                        <i class="fas fa-notes-medical"></i>
+                        <span>Symptom Analysis</span>
+                        <div class="nav-description">AI-powered disease diagnosis</div>
+                    </button>
+                </div>
+                
+                <div class="nav-item">
+                    <button id="medicationBtn" class="nav-button">
                         <i class="fas fa-pills"></i>
-                        <h3>Medication Guide</h3>
-                        <p>Get recommended medications for your condition</p>
-                    </div>
-                    <div class="feature-card">
+                        <span>Medications</span>
+                        <div class="nav-description">Browse medicines by disease</div>
+                    </button>
+                </div>
+                
+                <div class="nav-item">
+                    <button id="precautionBtn" class="nav-button">
                         <i class="fas fa-shield-alt"></i>
-                        <h3>Precautions</h3>
-                        <p>Learn preventive measures for various diseases</p>
+                        <span>Precautions</span>
+                        <div class="nav-description">Safety measures & guidelines</div>
+                    </button>
+                </div>
+                
+                <div class="nav-item">
+                    <button id="historyBtn" class="nav-button">
+                        <i class="fas fa-history"></i>
+                        <span>Patient History</span>
+                        <div class="nav-description">View consultation records</div>
+                    </button>
+                </div>
+                
+                <div class="nav-item">
+                    <button id="aboutBtn" class="nav-button">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About System</span>
+                        <div class="nav-description">Learn about our platform</div>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="system-info">
+                    <p><i class="fas fa-code"></i> v1.0.0</p>
+                    <p><i class="fas fa-database"></i> MySQL Database</p>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <div class="welcome-content">
+                    <h2>Welcome to MediCare Hospital System</h2>
+                    <p>Experience the future of healthcare with our AI-powered diagnostic system that provides accurate disease predictions, personalized medication recommendations, and comprehensive care guidelines.</p>
+                    
+                    <div class="welcome-features">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <h3>AI-Powered Diagnosis</h3>
+                            <p>Advanced algorithms analyze symptoms to provide accurate disease predictions with confidence scores.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-pills"></i>
+                            </div>
+                            <h3>Smart Medication Guide</h3>
+                            <p>Get personalized medicine recommendations with proper dosages and administration guidelines.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3>Comprehensive Precautions</h3>
+                            <p>Access detailed safety measures and preventive guidelines for various medical conditions.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h3>Professional Database</h3>
+                            <p>Built on extensive medical knowledge with input from healthcare professionals.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="get-started">
+                        <h3>Ready to Get Started?</h3>
+                        <p>Click on "Symptom Analysis" in the sidebar to begin your diagnostic journey.</p>
+                        <button class="cta-button" onclick="document.getElementById('symptomBtn').click()">
+                            <i class="fas fa-play"></i>
+                            Start Diagnosis
+                        </button>
                     </div>
                 </div>
             </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Processing your request...</p>
         </div>
     </div>
+
+    <!-- Scripts -->
     <script src="app.js"></script>
 </body>
+</html>
