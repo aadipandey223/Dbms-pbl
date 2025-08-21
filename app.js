@@ -1,6 +1,6 @@
 // Enhanced Patient Diagnosis System - Frontend
-const API_BASE = 'http://localhost:5001/api'; // Enhanced API
-const ENHANCED_API_BASE = 'http://localhost:5001/api'; // For new features
+const API_BASE = 'http://localhost:8000/api'; // Enhanced API
+const ENHANCED_API_BASE = 'http://localhost:8000/api'; // For new features
 
 // Global state
 let currentUser = null;

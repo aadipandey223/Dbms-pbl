@@ -290,8 +290,6 @@ def diagnose_symptoms():
         symptoms = data.get('symptoms', [])
         patient_id = data.get('patient_id')
         
-        print(f"DEBUG: Diagnosis request - symptoms: {symptoms}, patient_id: {patient_id}")
-        
         if not symptoms:
             return jsonify({'success': False, 'error': 'Symptoms are required'}), 400
         
@@ -357,48 +355,22 @@ def diagnose_symptoms():
         
         # Update symptoms table if patient_id provided
         if patient_id:
-            # First, reset all symptoms to false
             cursor.execute("""
                 UPDATE symptoms_table 
-                SET fever = 0, high_fever = 0, mild_fever = 0, chills = 0, fatigue = 0,
-                    weakness = 0, body_ache = 0, body_pain = 0, night_sweats = 0, sweating = 0,
-                    weight_loss = 0, dry_cough = 0, wet_cough = 0, persistent_cough = 0,
-                    blood_in_cough = 0, chest_pain = 0, chest_tightness = 0, breathing_difficulty = 0,
-                    fast_breathing = 0, sore_throat = 0, runny_nose = 0, sneezing = 0,
-                    nasal_congestion = 0, nausea = 0, vomiting = 0, diarrhea = 0, constipation = 0,
-                    stomach_pain = 0, stomach_cramps = 0, loss_of_appetite = 0, appetite_loss = 0,
-                    dehydration = 0, dizziness = 0, headache = 0, confusion = 0, rash = 0,
-                    skin_rash = 0, skin_blisters = 0, red_eyes = 0, watery_eyes = 0, itchy_eyes = 0,
-                    itchy_throat = 0, eye_pain = 0, ear_pain = 0, bleeding_gums = 0, low_platelet = 0,
-                    difficulty_swallowing = 0, swollen_tonsils = 0, white_spots_mouth = 0
+                SET symptom1 = %s, symptom2 = %s, symptom3 = %s, symptom4 = %s, symptom5 = %s
                 WHERE registration_id = %s
-            """, (patient_id,))
-            
-            # Then set the specific symptoms to true
-            for symptom in symptoms:
-                if symptom in ['fever', 'high_fever', 'mild_fever', 'chills', 'fatigue', 'weakness', 
-                              'body_ache', 'body_pain', 'night_sweats', 'sweating', 'weight_loss',
-                              'dry_cough', 'wet_cough', 'persistent_cough', 'blood_in_cough',
-                              'chest_pain', 'chest_tightness', 'breathing_difficulty', 'fast_breathing',
-                              'sore_throat', 'runny_nose', 'sneezing', 'nasal_congestion', 'nausea',
-                              'vomiting', 'diarrhea', 'constipation', 'stomach_pain', 'stomach_cramps',
-                              'loss_of_appetite', 'appetite_loss', 'dehydration', 'dizziness',
-                              'headache', 'confusion', 'rash', 'skin_rash', 'skin_blisters',
-                              'red_eyes', 'watery_eyes', 'itchy_eyes', 'itchy_throat', 'eye_pain',
-                              'ear_pain', 'bleeding_gums', 'low_platelet', 'difficulty_swallowing',
-                              'swollen_tonsils', 'white_spots_mouth']:
-                    cursor.execute(f"""
-                        UPDATE symptoms_table 
-                        SET {symptom} = 1 
-                        WHERE registration_id = %s
-                    """, (patient_id,))
-            
+            """, (
+                symptoms[0] if len(symptoms) > 0 else '',
+                symptoms[1] if len(symptoms) > 1 else '',
+                symptoms[2] if len(symptoms) > 2 else '',
+                symptoms[3] if len(symptoms) > 3 else '',
+                symptoms[4] if len(symptoms) > 4 else '',
+                patient_id
+            ))
             conn.commit()
         
         cursor.close()
         conn.close()
-        
-        print(f"DEBUG: Diagnosis completed - found {len(results)} matching diseases")
         
         return jsonify({
             'success': True,
@@ -407,7 +379,6 @@ def diagnose_symptoms():
         })
         
     except Exception as e:
-        print(f"DEBUG: Error in diagnose_symptoms: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Consultation Management Endpoints
@@ -760,11 +731,3 @@ if __name__ == '__main__':
     print("🚀 Starting Enhanced Patient Diagnosis System...")
     print("📱 Enhanced API will be available at: http://localhost:8000")
     print("🔐 New Features:")
-    print("   - User Authentication & Role Management")
-    print("   - Patient Consultation History")
-    print("   - Treatment Plan Management")
-    print("   - Analytics Dashboard")
-    print("   - Patient-Doctor Relationships")
-    print("=" * 60)
-    
-    app.run(debug=True, host='0.0.0.0', port=8000)
