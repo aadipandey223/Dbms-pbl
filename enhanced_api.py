@@ -5,17 +5,18 @@ import json
 from datetime import datetime, date
 import hashlib
 from functools import wraps
+import os
 
 app = Flask(__name__)
 app.secret_key = 'medicare_secret_key_2025'
 CORS(app, supports_credentials=True)
 
-# Database configuration
+# Database configuration (override with environment variables if provided)
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'password',
-    'database': 'patient'
+    'host': os.environ.get('DB_HOST', 'localhost'),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', 'password'),
+    'database': os.environ.get('DB_NAME', 'patient')
 }
 
 def get_db_connection():
@@ -760,10 +761,15 @@ def health_check():
 def serve_index():
     return send_from_directory('.', 'index.html')
 
+# Serve static assets (CSS/JS) when hitting the API port directly
+@app.route('/<path:filename>')
+def serve_static_file(filename):
+    return send_from_directory('.', filename)
+
 if __name__ == '__main__':
-    print("🚀 Starting Enhanced Patient Diagnosis System...")
-    print("📱 Enhanced API will be available at: http://localhost:8000")
-    print("🔐 New Features:")
+    print("[API] Starting Enhanced Patient Diagnosis System...")
+    print("[API] Available at: http://localhost:8000")
+    print("[API] Features:")
     print("   - User Authentication & Role Management")
     print("   - Patient Consultation History")
     print("   - Treatment Plan Management")

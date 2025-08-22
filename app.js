@@ -465,15 +465,6 @@ async function setupPatientForm() {
         try {
             showLoading(true);
             
-            // Example fetch to Flask API
-            fetch('http://localhost:8000/api/patient/register', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name, age, gender, contact })
-            })
-            .then(res => res.json())
-            .then(data => console.log(data));
-            
             const response = await apiCall('/patient/register', {
                 method: 'POST',
                 body: JSON.stringify(patientData)

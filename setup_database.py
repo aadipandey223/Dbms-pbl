@@ -16,13 +16,13 @@ def setup_database():
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
         
-        print("🔧 Setting up database...")
+        print("[DB] Setting up database...")
         
         # Create database if it doesn't exist
         cursor.execute("CREATE DATABASE IF NOT EXISTS patient")
         cursor.execute("USE patient")
         
-        print("✅ Database 'patient' created/verified")
+        print("[OK] Database 'patient' created/verified")
         
         # Read and execute the SQL file
         with open('Patient_entry.sql', 'r') as file:
@@ -36,13 +36,13 @@ def setup_database():
             if statement and not statement.startswith('--'):
                 try:
                     cursor.execute(statement)
-                    print(f"✅ Executed: {statement[:50]}...")
+                    print(f"[OK] Executed: {statement[:50]}...")
                 except mysql.connector.Error as err:
                     if "already exists" not in str(err).lower():
-                        print(f"⚠️  Warning: {err}")
+                        print(f"[WARN] {err}")
         
         # Create additional tables for enhanced features
-        print("🔧 Creating enhanced feature tables...")
+        print("[DB] Creating enhanced feature tables...")
         
         # User accounts table
         cursor.execute("""
@@ -110,8 +110,8 @@ def setup_database():
         """)
         
         conn.commit()
-        print("✅ Enhanced tables created successfully")
-        print("✅ Default users created:")
+        print("[OK] Enhanced tables created successfully")
+        print("[OK] Default users created:")
         print("   - Admin: admin/admin123")
         print("   - Doctor: doctor/doctor123")
         print("   - Nurse: nurse/nurse123")
@@ -119,14 +119,14 @@ def setup_database():
         cursor.close()
         conn.close()
         
-        print("🎉 Database setup completed successfully!")
+        print("[DONE] Database setup completed successfully!")
         return True
         
     except mysql.connector.Error as err:
-        print(f"❌ Database setup failed: {err}")
+        print(f"[ERROR] Database setup failed: {err}")
         return False
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"[ERROR] Unexpected error: {e}")
         return False
 
 if __name__ == "__main__":
