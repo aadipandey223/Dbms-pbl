@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, send_from_directory
 from flask_cors import CORS
 import mysql.connector
 import json
@@ -755,6 +755,10 @@ def health_check():
             'status': 'unhealthy',
             'error': str(e)
         }), 500
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Patient Diagnosis System...")
